@@ -1,4 +1,4 @@
-from LLMs import get_random_models,get_response_model,model_dict
+from LLMs import get_random_models,model_dict
 from dotenv import load_dotenv
 import pandas as pd
 import gradio as gr
@@ -10,7 +10,7 @@ load_dotenv()
 scores={}
 df=None
 if os.path.exists("results.json"):
-    with open("results.json", 'r') as file:
+    with open("results.json",'r') as file:
         scores=json.load(file)
 else:
     for model_name in model_dict.keys():
@@ -18,9 +18,9 @@ else:
 
 def save_scores():
     global df
-    with open("results.json", 'w') as file:
+    with open("results.json",'w') as file:
         json.dump(scores,file)
-        df=pd.DataFrame(list(scores.items()), columns=["Model", "Score"])
+        df=pd.DataFrame(list(scores.items()),columns=["Model", "Score"])
 
 current_models=get_random_models()
 while(current_models[0]==current_models[1]):
@@ -35,8 +35,8 @@ for key,value in model_dict.items():
 
 def generate_responses(prompt):
     modeli1,modeli2=current_models[0],current_models[1]
-    response1=get_response_model(modeli1, prompt)
-    response2=get_response_model(modeli2, prompt)
+    response1=modeli1.invoke(prompt).content
+    response2=modeli2.invoke(prompt).content
     return [(prompt, response1)],[(prompt, response2)]
 
 def voting(v_m1,v_m2):   
@@ -62,7 +62,7 @@ def new_round():
 
 def main():
     with gr.Blocks(css=".gradio-container") as demo:
-        with gr.Tab("⚔️Arena(battle)"):
+        with gr.Tab("⚔️ Arena(battle)"):
             gr.Markdown("# LLM Arena")
             gr.Markdown("📜 Rules")
             Rules="""
@@ -81,6 +81,7 @@ def main():
             with gr.Row():
                 prompt=gr.Textbox(label="Enter your prompt:", placeholder="Enter your prompt here", lines=1,scale=3)
                 generate_btn=gr.Button("Submit")
+                generate_btn.click(generate_responses, inputs=[prompt], outputs=[response1,response2])
                 
             with gr.Accordion("🥷 Current Models", open=False):
                 with gr.Row():
@@ -95,17 +96,17 @@ def main():
 
             with gr.Row():
                     new_round_btn=gr.Button("🎲 Regenerate Models 🎲")
+                    new_round_btn.click(new_round, outputs=[response1,response2,mod1,mod2])
                     clear_btn=gr.Button("🧹 Clear")
+                    clear_btn.click(lambda:([],[],""),outputs=[response1,response2,prompt])
+                    
         with gr.Tab("🏆 Leaderboard"):
             df=pd.DataFrame(list(scores.items()), columns=["Model", "Score"])
             df1=gr.DataFrame(value=df,interactive=False)
 
-        generate_btn.click(generate_responses, inputs=[prompt], outputs=[response1,response2])
         btn_v1.click(voting, inputs=[gr.State(True), gr.State(False)], outputs=[df1,mod1,mod2])
         btn_v2.click(voting, inputs=[gr.State(False), gr.State(True)], outputs=[df1,mod1,mod2])
         btn_both.click(voting, inputs=[gr.State(True), gr.State(True)], outputs=[df1,mod1,mod2])
-        new_round_btn.click(new_round, outputs=[response1,response2,mod1,mod2])
-        clear_btn.click(lambda:([],[],""),outputs=[response1,response2,prompt])
 
     demo.launch(share=True)
 
