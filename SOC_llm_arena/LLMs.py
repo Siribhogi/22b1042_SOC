@@ -27,7 +27,3 @@ model_dict={
 
 def get_random_models(number: int = 2):
     return random.sample(list(model_dict.values()),k=number)
-
-def get_response_model(model, prompt):
-    response = model.invoke(prompt)
-    return response.content
