@@ -34,7 +34,7 @@ for key,value in model_dict.items():
     if value==current_models[1]:
         model2_name=key
 
-def generate_responses(prompt):
+def generate(prompt):
     global vote
     vote=True
     modeli1,modeli2=current_models[0],current_models[1]
@@ -53,7 +53,7 @@ def voting(v_m1,v_m2):
     save_scores()
     return df,model1_name,model2_name
 
-def new_round():
+def regenerate():
     global current_models,model1_name,model2_name,vote
     vote=False
     current_models=get_random_models()
@@ -88,7 +88,7 @@ def main():
             with gr.Row():
                 prompt=gr.Textbox(label="Enter your prompt:", placeholder="Enter your prompt here", lines=1,scale=3)
                 generate_btn=gr.Button("Submit")
-                generate_btn.click(generate_responses, inputs=[prompt], outputs=[response1,response2])
+                generate_btn.click(generate, inputs=[prompt], outputs=[response1,response2])
                 
             with gr.Accordion("🥷 Current Models", open=False):
                 with gr.Row():
@@ -103,7 +103,7 @@ def main():
 
             with gr.Row():
                     new_round_btn=gr.Button("🎲 Regenerate Models 🎲")
-                    new_round_btn.click(new_round, outputs=[response1,response2,mod1,mod2])
+                    new_round_btn.click(regenerate, outputs=[response1,response2,mod1,mod2])
                     clear_btn=gr.Button("🧹 Clear")
                     clear_btn.click(lambda:([],[],""),outputs=[response1,response2,prompt])
                     
