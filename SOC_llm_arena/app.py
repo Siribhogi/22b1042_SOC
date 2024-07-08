@@ -8,6 +8,7 @@ import os
 load_dotenv()
 
 scores={}
+vote=False
 df=None
 if os.path.exists("results.json"):
     with open("results.json",'r') as file:
@@ -34,21 +35,27 @@ for key,value in model_dict.items():
         model2_name=key
 
 def generate_responses(prompt):
+    global vote
+    vote=True
     modeli1,modeli2=current_models[0],current_models[1]
     response1=modeli1.invoke(prompt).content
     response2=modeli2.invoke(prompt).content
     return [(prompt, response1)],[(prompt, response2)]
 
 def voting(v_m1,v_m2):   
-    if v_m1:
-        scores[model1_name]+=1
-    if v_m2:
-        scores[model2_name]+=1
+    global vote
+    if vote:
+        if v_m1:
+            scores[model1_name]+=1
+        if v_m2:
+            scores[model2_name]+=1
+        vote=False
     save_scores()
     return df,model1_name,model2_name
 
 def new_round():
-    global current_models,model1_name,model2_name
+    global current_models,model1_name,model2_name,vote
+    vote=False
     current_models=get_random_models()
     while(current_models[0]==current_models[1]):
         current_models=get_random_models()
